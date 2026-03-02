@@ -5,6 +5,7 @@ import threading
 from typing import List, Optional
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 import config
@@ -20,13 +21,38 @@ class FireSmokeDetector:
         self.model: Optional[YOLO] = None
         self.lock = threading.Lock()
 
-    def detect(self, frame) -> List[Detection]:
-        """Run detection on a single frame and return detections."""
+    def detect(self, frame, mode: str = "yolo") -> List[Detection]:
+        """Run detection on a single frame and return detections based on mode."""
+        detections: List[Detection] = []
+
+        if mode == "hsv":
+            # Resize frame for performance if very large, but we'll use original for now
+            blur = cv2.GaussianBlur(frame, (21, 21), 0)
+            hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+
+            lower = np.array([18, 50, 50], dtype="uint8")
+            upper = np.array([35, 255, 255], dtype="uint8")
+
+            mask = cv2.inRange(hsv, lower, upper)
+            no_red = cv2.countNonZero(mask)
+
+            if int(no_red) > 15000:
+                # Find the bounding box of the fire
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    # Get the largest contour representing the fire
+                    c = max(contours, key=cv2.contourArea)
+                    x, y, w, h = cv2.boundingRect(c)
+                    detections.append(Detection(label="fire", confidence=1.0, box=(float(x), float(y), float(x + w), float(y + h))))
+            return detections
+
         with self.lock:
-            if self.model is None:
+            # Mode acts as the model_path for YOLO models now
+            if self.model is None or self.model_path != mode:
+                self.model_path = mode
                 self.model = YOLO(self.model_path)
             results = self.model.predict(source=frame, imgsz=640, conf=self.conf_threshold, verbose=False)
-        detections: List[Detection] = []
+        
         if not results:
             return detections
         result = results[0]

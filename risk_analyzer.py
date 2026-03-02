@@ -12,14 +12,13 @@ from utils import RiskResult
 
 PROMPT_TEMPLATE = (
     "You are a fire risk assessment AI. Analyze this image for fire and smoke detection.\n\n"
-    "Based on the visual evidence and detection data:\n{json_data}\n\n"
     "Classify risk as:\nLOW, MEDIUM, HIGH, CRITICAL.\n\n"
-    "**IMPORTANT: Respond entirely in Burmese language.**\n\n"
     "Provide:\n"
     "- Risk level (LOW/MEDIUM/HIGH/CRITICAL)\n"
     "- Explanation in Burmese (2-3 sentences about what you see in the image)\n"
     "- Severity assessment\n"
-    "- Recommended immediate actions"
+    "- Recommended immediate actions\n\n"
+    "User Context/Prompt: {custom_prompt}"
 )
 
 
@@ -34,8 +33,11 @@ class RiskAnalyzer:
             image_bytes = f.read()
         return base64.b64encode(image_bytes).decode("utf-8")
 
-    def _build_payload_with_image(self, metrics: Dict, image_base64: str) -> Dict:
-        prompt = PROMPT_TEMPLATE.format(json_data=json.dumps(metrics, indent=2))
+    def _build_payload_with_image(self, metrics: Dict, image_base64: str, custom_prompt: str = "") -> Dict:
+        prompt = PROMPT_TEMPLATE.format(
+            json_data=json.dumps(metrics, indent=2),
+            custom_prompt=custom_prompt if custom_prompt else "No context provided."
+        )
         return {
             "model": "gpt-4o-mini",
             "messages": [
@@ -60,7 +62,7 @@ class RiskAnalyzer:
             "max_tokens": 300,
         }
 
-    def analyze_with_image(self, metrics: Dict, image_path: str) -> RiskResult:
+    def analyze_with_image(self, metrics: Dict, image_path: str, custom_prompt: str = "") -> RiskResult:
         """Analyze risk with AI using both image and detection data."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -69,7 +71,7 @@ class RiskAnalyzer:
         
         # Encode image to base64
         image_base64 = self._encode_image_to_base64(image_path)
-        payload = self._build_payload_with_image(metrics, image_base64)
+        payload = self._build_payload_with_image(metrics, image_base64, custom_prompt)
         
         response = requests.post(self.api_url, headers=headers, json=payload, timeout=config.LLM_TIMEOUT * 2)
         response.raise_for_status()

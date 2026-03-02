@@ -9,9 +9,9 @@ LLM_API_URL: str = "https://models.inference.ai.azure.com/chat/completions"  # O
  
     
 # Model and detection
-MODEL_PATH: str = "models/fire_smoke.pt"
+MODEL_PATH: str = "models/optimized150.pt"
 CONF_THRESHOLD: float = 0.6
-CAPTURE_INTERVAL: int = 5  # Capture frame every 5 seconds for best performance
+CAPTURE_INTERVAL: int = 5  # Capture snapshot every 5 seconds
 CAMERA_WIDTH: int = 640
 CAMERA_HEIGHT: int = 480
 CAMERA_FPS: int = 15

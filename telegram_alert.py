@@ -27,7 +27,7 @@ class TelegramAlerter:
         return (time.time() - self.last_sent_ts) >= self.cooldown
 
     def send_alert_with_ai_analysis(
-        self, image_path: str, risk_level: str, explanation: str, timestamp: str, detections: List[Detection]
+        self, image_path: str, risk_level: str, explanation: str, timestamp: str, detections: List[Detection], chat_ids: str = ""
     ) -> bool:
         """Send alert to Telegram with AI agent analysis of the detection in Burmese."""
         if not self.can_send():
@@ -65,18 +65,31 @@ class TelegramAlerter:
             f"📷 စုစုပေါင်း တွေ့ရှိမှု: {len(detections)} ခု"
         )
 
-        files = {"photo": open(Path(image_path), "rb")}
-        data = {"chat_id": self.chat_id, "caption": caption}
-
-        try:
-            resp = requests.post(
-                f"{self.base_url}/sendPhoto", data=data, files=files, timeout=config.TELEGRAM_TIMEOUT
-            )
-            resp.raise_for_status()
+        files_path = Path(image_path)
+        
+        # Determine targets
+        target_ids = [cid.strip() for cid in chat_ids.split(",") if cid.strip()] if chat_ids else [self.chat_id]
+        
+        success = False
+        for target in target_ids:
+            # We must reopen the file for each request iteration
+            files = {"photo": open(files_path, "rb")}
+            data = {"chat_id": target, "caption": caption}
+    
+            try:
+                resp = requests.post(
+                    f"{self.base_url}/sendPhoto", data=data, files=files, timeout=config.TELEGRAM_TIMEOUT
+                )
+                resp.raise_for_status()
+                success = True
+            except Exception:
+                pass
+            finally:
+                files["photo"].close()
+        
+        if success:
             self.last_sent_ts = time.time()
-            return True
-        except Exception:
-            return False
+        return success
 
     def _get_ai_agent_analysis(self, detections: List[dict], risk_level: str, base_explanation: str) -> str:
         """Use AI agent to generate enhanced analysis in Burmese."""
@@ -130,16 +143,24 @@ class TelegramAlerter:
         except Exception:
             return False
 
-    def send_text(self, text: str) -> bool:
+    def send_text(self, text: str, chat_ids: str = "") -> bool:
         if not self.can_send():
             return False
-        data = {"chat_id": self.chat_id, "text": text}
-        try:
-            resp = requests.post(
-                f"{self.base_url}/sendMessage", data=data, timeout=config.TELEGRAM_TIMEOUT
-            )
-            resp.raise_for_status()
+            
+        target_ids = [cid.strip() for cid in chat_ids.split(",") if cid.strip()] if chat_ids else [self.chat_id]
+        success = False
+        
+        for target in target_ids:
+            data = {"chat_id": target, "text": text}
+            try:
+                resp = requests.post(
+                    f"{self.base_url}/sendMessage", data=data, timeout=config.TELEGRAM_TIMEOUT
+                )
+                resp.raise_for_status()
+                success = True
+            except Exception:
+                pass
+                
+        if success:
             self.last_sent_ts = time.time()
-            return True
-        except Exception:
-            return False
+        return success
