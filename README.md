@@ -62,9 +62,7 @@ ASCII flow, quick usage, and future work for the fire detection project.
 
 ## Quick Usage
 
-Prereqs: Python 3.8+, OpenCV, PyTorch, numpy, pandas, Pillow, python-telegram-bot (as needed).
-
-Example environment setup:
+For detailed installation and configuration steps, please refer to the [SETUP.md](file:///c:/Users/thura/projects/opencv/fire-detection-system/fire_ai_system/SETUP.md) file.
 
 ```bash
 python -m venv venv

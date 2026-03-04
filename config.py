@@ -1,11 +1,14 @@
-"""Configuration for Fire AI System."""
-from __future__ import annotations
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Tokens and keys
-TELEGRAM_TOKEN: str = "8292116348:AAGJbnxdNzga0Fu1s7aToy00GGBtSW4unok"
-TELEGRAM_CHAT_ID: str = "1936843947"
-LLM_API_KEY: str = "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"
-LLM_API_URL: str = "https://models.inference.ai.azure.com/chat/completions"  # OpenAI-compatible endpoint
+TELEGRAM_TOKEN: str = os.getenv("TELEGRAM_TOKEN", "8292116348:AAGJbnxdNzga0Fu1s7aToy00GGBtSW4unok")
+TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "1936843947")
+LLM_API_KEY: str = os.getenv("LLM_API_KEY", "---------xxxx---")
+LLM_API_URL: str = os.getenv("LLM_API_URL", "https://models.inference.ai.azure.com/chat/completions")
  
     
 # Model and detection
