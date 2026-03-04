@@ -29,8 +29,6 @@ Follow these steps to set up and run the Fire AI System.
 3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
-   # OR if requirements.txt is not yet available:
-   pip install opencv-python ultralytics python-dotenv python-telegram-bot numpy pandas Pillow requests
    ```
 
 ## Model Download

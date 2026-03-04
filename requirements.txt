@@ -1,0 +1,10 @@
+opencv-python
+ultralytics
+PyQt5
+python-dotenv
+numpy
+pandas
+requests
+Pillow
+torch
+torchvision
